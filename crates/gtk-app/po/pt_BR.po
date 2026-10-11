@@ -1,0 +1,443 @@
+# BigSound — Brazilian Portuguese translation.
+# Copyright (C) 2026 BigCommunity Team
+# This file is distributed under the same license as BigSound.
+# Leonardo Athayde, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: bigsound 0.7\n"
+"Report-Msgid-Bugs-To: https://github.com/big-comm/bigsound/issues\n"
+"POT-Creation-Date: 2026-05-03\n"
+"PO-Revision-Date: 2026-05-03\n"
+"Last-Translator: Leonardo Athayde\n"
+"Language-Team: Brazilian Portuguese\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# === Header / titles ===
+
+msgid "DSP"
+msgstr "DSP"
+
+msgid "System-wide audio enhancement — set output to BigSound (DSP) in Sound settings."
+msgstr "Realce de áudio do sistema todo — selecione BigSound (DSP) em Configurações de Som."
+
+msgid "Output device"
+msgstr "Dispositivo de saída"
+
+msgid "Pick \"BigSound (DSP)\" in Settings → Sound → Output to route audio through BigSound."
+msgstr "Selecione \"BigSound (DSP)\" em Configurações → Som → Saída para enviar o áudio pelo BigSound."
+
+msgid "Automatic (follow priority)"
+msgstr "Automático (segue a prioridade)"
+
+msgid "Which speakers or headphones BigSound plays through"
+msgstr "Por quais alto-falantes ou fones o BigSound toca"
+
+# === Slider titles ===
+
+msgid "Bass"
+msgstr "Grave"
+
+msgid "Bass Frequency (Hz)"
+msgstr "Frequência do Grave (Hz)"
+
+msgid "Bass Mix"
+msgstr "Mix do Grave"
+
+msgid "Clarity"
+msgstr "Brilho"
+
+msgid "Space"
+msgstr "Espaço"
+
+msgid "Crossfeed (Headphones)"
+msgstr "Crossfeed (Fones)"
+
+msgid "Loudness"
+msgstr "Loudness"
+
+msgid "Output Ceiling (dB)"
+msgstr "Teto de Saída (dB)"
+
+# === Slider subtitles ===
+
+msgid "Make-up gain on the psychoacoustic bass enhancement"
+msgstr "Ganho de compensação no realce psicoacústico de grave"
+
+msgid "Below this the speaker rolls off; harmonics are synthesised here"
+msgstr "Abaixo dessa frequência o alto-falante perde resposta; os harmônicos são sintetizados aqui"
+
+msgid "How much of the synthesised harmonic content to add"
+msgstr "Quanto do conteúdo harmônico sintetizado misturar"
+
+msgid "Treble exciter — sparkle on hi-hats, vocals, strings"
+msgstr "Exciter de agudos — brilho em pratos, voz e cordas"
+
+msgid "Stereo widening — 1.0 neutral, >1.0 wider, with bass kept centred"
+msgstr "Alargamento estéreo — 1,0 neutro, >1,0 mais amplo, com grave mantido no centro"
+
+msgid "Stereo widening — 1.0 neutral, >1.0 wider. Above 1.5 hard-panned content can phase-flip; cap is intentional."
+msgstr "Alargamento estéreo — 1,0 neutro, >1,0 mais amplo. Acima de 1,5 conteúdo panoramizado pode inverter de fase; o limite é proposital."
+
+msgid "Out-of-head soundstage — moves the image forward, less fatigue. 0 on speakers."
+msgstr "Palco sonoro fora da cabeça — projeta a imagem à frente, menos cansaço. 0 em alto-falantes."
+
+msgid "Compressor strength — higher = louder average, less dynamic"
+msgstr "Intensidade do compressor — maior = média mais alta, menos dinâmica"
+
+msgid "Peak limiter target — closer to 0 = louder peaks, more risk"
+msgstr "Alvo do limiter de pico — perto de 0 = picos mais altos, mais risco"
+
+# === Tooltips ===
+
+msgid "Reset to defaults"
+msgstr "Restaurar padrões"
+
+msgid "About BigSound"
+msgstr "Sobre o BigSound"
+
+msgid "Output profile (auto-applied when you change device)"
+msgstr "Perfil de saída (aplicado automaticamente ao trocar de dispositivo)"
+
+# === About dialog credit section titles ===
+
+msgid "Maintainer"
+msgstr "Mantenedor"
+
+msgid "DSP techniques"
+msgstr "Técnicas de DSP"
+
+msgid "Built on"
+msgstr "Construído com"
+
+msgid "Translation"
+msgstr "Tradução"
+
+# === About dialog comments / description ===
+
+msgid ""
+"System-wide audio enhancement for BigCommunity.\n"
+"\n"
+"A five-stage Rust DSP chain — BigBass (psychoacoustic bass synthesis), "
+"BigClarity (treble exciter), BigSpace (Mid/Side widener), BigCross "
+"(Bauer crossfeed for headphones) and BigLoud (compressor + limiter) "
+"— routed through PipeWire's filter-chain. Auto-applies a tuned "
+"profile when you switch output device (laptop, headphones, Bluetooth, "
+"HDMI), with built-in presets ranging from Studio Reference to "
+"Atmos / Cinema."
+msgstr ""
+"Realce de áudio para todo o sistema, do BigCommunity.\n"
+"\n"
+"Cadeia DSP de cinco estágios em Rust — BigBass (síntese psicoacústica "
+"de grave), BigClarity (exciter de agudos), BigSpace (alargamento "
+"Mid/Side), BigCross (crossfeed Bauer para fones) e BigLoud (compressor "
+"+ limiter) — roteada pelo filter-chain do PipeWire. Aplica um perfil "
+"afinado automaticamente ao trocar o dispositivo de saída (laptop, fones, "
+"Bluetooth, HDMI), com presets prontos que vão de Referência de Estúdio "
+"a Atmos / Cinema."
+
+# === Profile names (canonical English msgid → localised display) ===
+
+msgid "BigSound"
+msgstr "BigSound"
+
+msgid "Laptop Speaker"
+msgstr "Alto-falante de Laptop"
+
+msgid "Headphones"
+msgstr "Fones de Ouvido"
+
+msgid "Headphones - Cinema"
+msgstr "Fones de Ouvido — Cinema"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "HDMI / TV"
+msgstr "HDMI / TV"
+
+msgid "Studio Reference"
+msgstr "Referência de Estúdio"
+
+msgid "Atmos / Cinema"
+msgstr "Atmos / Cinema"
+
+msgid "Audiophile"
+msgstr "Audiófilo"
+
+msgid "Punchy"
+msgstr "Impacto"
+
+msgid "Gaming"
+msgstr "Jogos"
+
+msgid "Voice / Podcast"
+msgstr "Voz / Podcast"
+
+msgid "Bass Heavy"
+msgstr "Grave Pesado"
+
+msgid "Late Night"
+msgstr "Madrugada"
+
+msgid "Live / Concert"
+msgstr "Ao Vivo / Concerto"
+
+# === Profile descriptions (canonical English msgid → localised text) ===
+# Shown as the subtitle of the sliders group when a profile is selected.
+# Keep msgid in sync with the "description" field of each profile JSON in
+# crates/daemon/data/profiles/.
+
+msgid "Balanced, hi-fi-friendly default. Lifts the audio noticeably without aggressive coloration — works on any hardware. Auto-applied when no device-specific profile matches, and the recommended starting point for exploring the other profiles."
+msgstr "Padrão balanceado, hi-fi friendly. Realça o áudio de forma perceptível mas sem coloração agressiva — funciona bem em qualquer hardware. É o perfil aplicado automaticamente quando nenhum dispositivo específico casa, e o ponto de partida recomendado para explorar os outros perfis."
+
+msgid "Aggressive bass synthesis + heavy compression for tiny rolled-off speakers; no crossfeed (room provides it physically)"
+msgstr "Síntese agressiva de grave + compressão pesada para alto-falantes pequenos com resposta limitada; sem crossfeed (a sala já fornece fisicamente)"
+
+msgid "Gentle enhancement and crossfeed for headphone listening. Crossfeed mixes a filtered, delayed signal between channels; adjust it to taste."
+msgstr "Realce suave e crossfeed para escuta com fones. O crossfeed mistura entre canais um sinal filtrado e atrasado; ajuste conforme a preferência."
+
+msgid "Manual stereo cinema preset for headphones, combining Bauer crossfeed and bass-aware widening. No surround decoding, HRTF convolution or head tracking."
+msgstr "Preset manual de cinema estéreo para fones, combinando crossfeed Bauer e alargamento com proteção do grave. Sem decodificação surround, convolução HRTF ou rastreamento da cabeça."
+
+msgid "Bass and treble enhancement with moderate crossfeed for Bluetooth outputs. Processing changes the received stereo signal; it does not restore information discarded by a codec."
+msgstr "Realce de graves e agudos com crossfeed moderado para saídas Bluetooth. O processamento altera o sinal estéreo recebido; não restaura informação descartada por um codec."
+
+msgid "Neutral tuning for TV / external display speakers — variable hardware, conservative defaults"
+msgstr "Tuning neutro para TVs e displays externos — hardware variável, padrões conservadores"
+
+msgid "Mastering-grade transparency — minimal coloration, true dynamics preserved. Use for critical listening, mixing, A/B reference. The chain becomes nearly invisible: only the peak limiter stays as a safety net."
+msgstr "Transparência de masterização — coloração mínima, dinâmica preservada. Use para escuta crítica, mixagem, referência A/B. A cadeia fica praticamente invisível: só o peak limiter permanece como rede de segurança."
+
+msgid "Stereo cinema preset with widening, crossfeed and bass enhancement. The name describes the intended character; this does not decode Dolby Atmos or render HRTF audio."
+msgstr "Preset de cinema estéreo com alargamento, crossfeed e realce de grave. O nome descreve o caráter pretendido; não decodifica Dolby Atmos nem renderiza áudio HRTF."
+
+msgid "Stereo widening, crossfeed and light compression for games. These effects can alter positional cues; compare with the game's own binaural processing before combining them."
+msgstr "Alargamento estéreo, crossfeed e compressão leve para jogos. Esses efeitos podem alterar pistas de posição; compare com o processamento binaural do próprio jogo antes de combiná-los."
+
+msgid "Vocal clarity boost + heavy compression for consistent talk-radio level. Stereo image kept narrow (close to mono) — speech is centred anyway and widening makes lispy sibilance worse."
+msgstr "Reforço de clareza vocal + compressão pesada para nível constante tipo talk-radio. Imagem estéreo mantida estreita (próxima do mono) — a fala já fica no centro e o alargamento piora sibilância e ceceio."
+
+msgid "EDM, hip-hop, dubstep — maximum sub-bass psychoacoustics, restrained treble (so it doesn't shrill on hot mixes), wide image, hard compression for club-loud impact."
+msgstr "EDM, hip-hop, dubstep — psicoacústica de sub-grave no máximo, agudos contidos (para não ferir em mixagens hot), imagem ampla, compressão pesada para impacto de pista de clube."
+
+msgid "Quiet listening that doesn't disturb others — bass is rolled off (thumps travel through walls), heavy compression keeps everything at a constant level so you don't crank-up-then-startle on a sudden loud bit. Vocal-clarity bump so you don't lose dialogue at low volume."
+msgstr "Escuta silenciosa sem incomodar os outros — grave atenuado (batidas viajam pelas paredes), compressão pesada mantém tudo num nível constante para não levar susto em trecho mais alto. Reforço de clareza vocal para não perder diálogo em volume baixo."
+
+msgid "Restrained bass and treble enhancement, light compression and headphone crossfeed. Processing can alter dynamics and stereo cues; compare against bypass at matched loudness."
+msgstr "Realce contido de graves e agudos, compressão leve e crossfeed para fones. O processamento pode alterar a dinâmica e as pistas estéreo; compare com bypass em volume equivalente."
+
+msgid "Live recordings, Tiny Desk-style sessions, concert bootlegs — wide stereo image to suggest the venue, slight bass push for kick-drum punch, exciter on cymbals and brushes, moderate compression so audience-noise spikes don't startle."
+msgstr "Gravações ao vivo, sessões estilo Tiny Desk, bootlegs de show — imagem estéreo ampla para sugerir o ambiente, leve reforço de grave para o punch do bumbo, exciter em pratos e vassourinhas, compressão moderada para que picos de plateia não assustem."
+
+msgid "FxSound-style aggressive — bass +6 dB, full compression, max squash. The original BigSound v0.4 feel that had users saying 'passthrough is less than half the volume'. Good on laptops, car speakers, or anywhere you want obvious impact. Fatiguing on good headphones."
+msgstr "Agressivo no estilo FxSound — grave +6 dB, compressão completa, esmagamento máximo. O feel original do BigSound v0.4, que fazia o usuário dizer 'passthrough é menos da metade do volume'. Bom em laptop, alto-falantes de carro, ou qualquer cenário em que você quer impacto óbvio. Em fone bom, fica fatigante."
+
+# === Error messages ===
+
+msgid "BigSound app: cannot reach session bus"
+msgstr "BigSound: não foi possível acessar o barramento de sessão"
+
+msgid "BigSound app: bigsound-daemon doesn't seem to be running."
+msgstr "BigSound: o bigsound-daemon não parece estar rodando."
+
+msgid "Try: systemctl --user start bigsound-daemon.service"
+msgstr "Tente: systemctl --user start bigsound-daemon.service"
+
+msgid "Audio update failed"
+msgstr "Falha ao atualizar o áudio"
+
+msgid "Close"
+msgstr "Fechar"
+
+# === Main / advanced interface and control overview ===
+
+msgid "Bass enhancement make-up gain, in dB"
+msgstr "Ganho de compensação do realce de grave, em dB"
+
+msgid "Frequency used to synthesise bass harmonics"
+msgstr "Frequência usada na síntese dos harmônicos de grave"
+
+msgid "Bass Drive"
+msgstr "Drive do Grave"
+
+msgid "Nonlinear harmonic generation strength"
+msgstr "Intensidade da geração não linear de harmônicos"
+
+msgid "Amount of synthesised bass added to the original"
+msgstr "Quantidade de grave sintetizado misturada ao original"
+
+msgid "Filter Original Bass"
+msgstr "Filtrar Grave Original"
+
+msgid "Remove lows from the original signal before adding harmonics"
+msgstr "Retira graves do sinal original antes de acrescentar os harmônicos"
+
+msgid "Amount of treble enhancement"
+msgstr "Quantidade de realce dos agudos"
+
+msgid "Clarity Frequency (Hz)"
+msgstr "Frequência do Brilho (Hz)"
+
+msgid "Frequency region used by the treble exciter"
+msgstr "Região de frequência usada pelo exciter de agudos"
+
+msgid "Clarity Drive"
+msgstr "Drive do Brilho"
+
+msgid "Treble harmonic generation strength"
+msgstr "Intensidade da geração de harmônicos de agudos"
+
+msgid "1.0 is neutral; above 1.5 can alter phase in hard-panned audio"
+msgstr "1,0 é neutro; acima de 1,5 pode alterar a fase em áudio panoramizado"
+
+msgid "Bass Centre (Hz)"
+msgstr "Centro do Grave (Hz)"
+
+msgid "Keep low frequencies centred in the stereo image"
+msgstr "Mantém as frequências graves no centro da imagem estéreo"
+
+msgid "Space Mix"
+msgstr "Mix do Espaço"
+
+msgid "Amount of stereo processing mixed with the original"
+msgstr "Quantidade de processamento estéreo misturada ao original"
+
+msgid "Filtered channel blending for headphones; use zero on speakers"
+msgstr "Mistura filtrada entre canais para fones; use zero em alto-falantes"
+
+msgid "Crossfeed Cutoff (Hz)"
+msgstr "Corte do Crossfeed (Hz)"
+
+msgid "Low-pass cutoff of the signal blended between channels"
+msgstr "Frequência de corte do sinal misturado entre os canais"
+
+msgid "Crossfeed Delay (µs)"
+msgstr "Atraso do Crossfeed (µs)"
+
+msgid "Delay of the signal blended between channels"
+msgstr "Atraso do sinal misturado entre os canais"
+
+msgid "Compression"
+msgstr "Compressão"
+
+msgid "Higher values reduce dynamics and raise average loudness"
+msgstr "Valores maiores reduzem a dinâmica e elevam o volume médio"
+
+msgid "Sample-peak ceiling; does not measure inter-sample true peaks"
+msgstr "Teto de pico de amostra; não mede picos entre amostras"
+
+msgid "Compression Mix"
+msgstr "Mix da Compressão"
+
+msgid "Amount of compressed audio mixed with the original"
+msgstr "Quantidade de áudio comprimido misturada ao original"
+
+msgid "Audio controls are busy. Please try again."
+msgstr "Os controles de áudio estão ocupados. Tente novamente."
+
+msgid "Balanced enhancement for everyday listening."
+msgstr "Realce equilibrado para a escuta do dia a dia."
+
+msgid "Minimal processing for reference listening."
+msgstr "Processamento mínimo para escuta de referência."
+
+msgid "Restrained enhancement and gentle headphone crossfeed."
+msgstr "Realce contido e crossfeed suave para fones."
+
+msgid "Stereo cinema preset with bass and spatial processing."
+msgstr "Cinema estéreo com realce de grave e processamento espacial."
+
+msgid "Stereo processing for games; compare positional cues."
+msgstr "Processamento estéreo para jogos; compare as pistas de posição."
+
+msgid "Vocal clarity and compression for dialogue."
+msgstr "Clareza vocal e compressão para os diálogos."
+
+msgid "Strong bass harmonics and compression."
+msgstr "Harmônicos de grave e compressão intensos."
+
+msgid "Reduced bass and steadier dialogue for quiet listening."
+msgstr "Grave reduzido e diálogos mais constantes para escuta discreta."
+
+msgid "Wider stereo and gentle enhancement for live recordings."
+msgstr "Estéreo mais amplo e realce suave para gravações ao vivo."
+
+msgid "Strong enhancement for small speakers."
+msgstr "Realce intenso para alto-falantes pequenos."
+
+msgid "Gentle enhancement with headphone crossfeed."
+msgstr "Realce suave com crossfeed para fones."
+
+msgid "Bass and treble enhancement for Bluetooth outputs."
+msgstr "Realce de graves e agudos para saídas Bluetooth."
+
+msgid "Conservative settings for TV and display speakers."
+msgstr "Ajustes conservadores para alto-falantes de TVs e monitores."
+
+msgid "Custom listening profile."
+msgstr "Perfil de escuta personalizado."
+
+msgid "Crossfeed"
+msgstr "Crossfeed"
+
+msgid "Restore selected profile"
+msgstr "Restaurar perfil selecionado"
+
+msgid "Listening profile"
+msgstr "Perfil de escuta"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Select BigSound (DSP) as the system output in Sound settings."
+msgstr "Selecione BigSound (DSP) como saída do sistema nas Configurações de Som."
+
+msgid "Control overview"
+msgstr "Resumo dos ajustes"
+
+msgid "Current control values; this does not measure the playing audio."
+msgstr "Valores atuais dos controles; não é uma medição do áudio em reprodução."
+
+msgid "Quick adjustments"
+msgstr "Ajustes rápidos"
+
+msgid "Main"
+msgstr "Principal"
+
+msgid "Advanced"
+msgstr "Avançado"
+
+msgid "Advanced settings"
+msgstr "Ajustes avançados"
+
+msgid "Bass synthesis"
+msgstr "Síntese de grave"
+
+msgid "Treble exciter"
+msgstr "Exciter de agudos"
+
+msgid "Stereo image"
+msgstr "Imagem estéreo"
+
+msgid "Headphone crossfeed"
+msgstr "Crossfeed para fones"
+
+msgid "Dynamics and output"
+msgstr "Dinâmica e saída"
+
+msgid "Active profile: {profile}. Changes are applied live."
+msgstr "Perfil ativo: {profile}. Os ajustes são aplicados em tempo real."
+
+msgid "Stereo width; 1.0 keeps the original image. Increase carefully."
+msgstr "Largura estéreo; 1,0 mantém a imagem original. Aumente com cuidado."
+
+msgctxt "decimal separator"
+msgid "."
+msgstr ","
+
+msgid "Automatic"
+msgstr "Automático"

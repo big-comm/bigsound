@@ -1,0 +1,15 @@
+[package]
+name = "big-clarity-ladspa"
+description = "LADSPA wrapper around BigClarity — treble exciter for PipeWire filter-chain"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "big_clarity"
+crate-type = ["cdylib"]
+
+[dependencies]
+big-clarity = { path = "../big-clarity" }
+ladspa-wrapper = { path = "../ladspa-wrapper" }

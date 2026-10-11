@@ -1,0 +1,24 @@
+{
+  "name": "Atmos / Cinema",
+  "description": "Stereo cinema preset with widening, crossfeed and bass enhancement. The name describes the intended character; this does not decode Dolby Atmos or render HRTF audio.",
+  "match_patterns": [],
+  "params": {
+    "bigbass:target_freq":   65.0,
+    "bigbass:drive":          0.7,
+    "bigbass:mix":            0.55,
+    "bigbass:cut_dry_lows":   0.0,
+    "bigbass:loudness_db":    5.5,
+    "bigclarity:target_freq": 2500.0,
+    "bigclarity:drive":       0.45,
+    "bigclarity:mix":         0.35,
+    "bigspace:width":         1.4,
+    "bigspace:bass_keep_hz": 150.0,
+    "bigspace:mix":           1.0,
+    "bigcross:amount":        0.35,
+    "bigcross:cutoff_hz":   650.0,
+    "bigcross:delay_us":    300.0,
+    "bigloud:amount":         0.6,
+    "bigloud:ceiling_db":    -1.0,
+    "bigloud:mix":            1.0
+  }
+}

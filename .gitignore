@@ -1,0 +1,31 @@
+# Cargo build artifacts.
+/target/
+**/target/
+
+# makepkg build artifacts (local package builds).
+packaging/pkg/
+packaging/src/
+packaging/*.pkg.tar*
+packaging/*.log
+
+# Test audio files (offline DSP validation).
+*.wav
+
+# IDE / editor.
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS metadata.
+.DS_Store
+Thumbs.db
+
+# Local review evidence and generated concept (the shipped icon is SVG).
+/validation-output/
+/assets/icon-concept.png
+
+__pycache__/
+
+# Reviewed source/package bundles (generated, not source files).
+/release-review/

@@ -1,0 +1,24 @@
+{
+  "name": "Gaming",
+  "description": "Stereo widening, crossfeed and light compression for games. These effects can alter positional cues; compare with the game's own binaural processing before combining them.",
+  "match_patterns": [],
+  "params": {
+    "bigbass:target_freq":   80.0,
+    "bigbass:drive":          0.55,
+    "bigbass:mix":            0.45,
+    "bigbass:cut_dry_lows":   0.0,
+    "bigbass:loudness_db":    3.5,
+    "bigclarity:target_freq": 5500.0,
+    "bigclarity:drive":       0.5,
+    "bigclarity:mix":         0.35,
+    "bigspace:width":         1.45,
+    "bigspace:bass_keep_hz": 120.0,
+    "bigspace:mix":           1.0,
+    "bigcross:amount":        0.7,
+    "bigcross:cutoff_hz":   800.0,
+    "bigcross:delay_us":    260.0,
+    "bigloud:amount":         0.15,
+    "bigloud:ceiling_db":    -1.0,
+    "bigloud:mix":            1.0
+  }
+}

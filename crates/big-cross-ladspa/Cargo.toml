@@ -1,0 +1,15 @@
+[package]
+name = "big-cross-ladspa"
+description = "LADSPA wrapper around BigCross — stereo crossfeed for PipeWire filter-chain"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "big_cross"
+crate-type = ["cdylib"]
+
+[dependencies]
+big-cross = { path = "../big-cross" }
+ladspa-wrapper = { path = "../ladspa-wrapper" }

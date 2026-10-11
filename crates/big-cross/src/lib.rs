@@ -1,0 +1,401 @@
+//! BigCross — Bauer-style stereo crossfeed.
+//!
+//! When you listen to headphones, each ear gets ONE channel — pure L on
+//! left, pure R on right. That's not how human hearing works in real
+//! life: with speakers, both ears receive both channels, but the
+//! "wrong-ear" channel arrives slightly later (the time it takes sound
+//! to travel around your head, ~250-300 µs) and slightly muffled (the
+//! head shadows high frequencies). The brain uses these delay+filter
+//! cues to build a 3D image.
+//!
+//! BigCross feeds a delayed, low-passed copy of each channel into the
+//! opposite ear. The result on headphones: the soundstage moves out of
+//! the centre of your skull and forward, music feels like it's coming
+//! from speakers in front of you instead of inside your head. A potentially more natural stereo image. This is conventional stereo
+//! crossfeed, not Atmos decoding or head-tracked HRIR rendering.
+//!
+//! Reference: Benjamin Bauer (1961), "Stereophonic Earphones and
+//! Binaural Loudspeakers". HeadRoom and the AMB β22 use similar topology.
+//!
+//! On speakers (not headphones), set `amount = 0` — your room already
+//! does the crossfeed physically.
+
+use big_bass::biquad::{Biquad, BiquadCoeffs};
+
+/// Bauer's classic cross-signal level: -9 dB at full crossfeed, linear ≈ 0.355.
+const BAUER_GAIN_LINEAR: f32 = 0.355;
+
+/// Headroom of the delay ring buffer in seconds. The delay knob caps at
+/// 500 µs (delay_us range 100..=500), so 1 ms is plenty.
+const BUFFER_HEADROOM_SEC: f32 = 0.001;
+
+/// Floor on the delay buffer length. Keeps the ring functional even at
+/// pathologically low sample rates.
+const MIN_BUFFER_SAMPLES: usize = 32;
+
+const US_PER_SEC: f32 = 1_000_000.0;
+
+use big_bass::biquad::finite_clamp;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CrossfeedParams {
+    /// 0 = bypass, 1 = full crossfeed (-9 dB cross signal level).
+    /// Typical sweet spot on headphones: 0.5..=0.8.
+    pub amount: f32,
+    /// Cutoff (Hz) of the low-pass on the cross signal. Mimics head
+    /// shadowing: above this frequency the wrong-ear channel arrives
+    /// strongly attenuated. Range 400..=1500. Default 700.
+    pub cutoff_hz: f32,
+    /// Delay (microseconds) of the cross signal. Approximates the time
+    /// for sound to travel around the listener's head. Range 100..=500.
+    /// Default 280 (corresponds to ~10 cm path difference, ear-to-ear).
+    pub delay_us: f32,
+    /// Pass-through.
+    pub bypass: bool,
+}
+
+impl CrossfeedParams {
+    fn sanitised(mut self) -> Self {
+        self.amount = finite_clamp(self.amount, 0.0, 0.0, 1.0);
+        self.cutoff_hz = finite_clamp(self.cutoff_hz, 700.0, 400.0, 1500.0);
+        self.delay_us = finite_clamp(self.delay_us, 280.0, 100.0, 500.0);
+        self
+    }
+}
+
+impl Default for CrossfeedParams {
+    fn default() -> Self {
+        Self {
+            amount: 0.0,
+            cutoff_hz: 700.0,
+            delay_us: 280.0,
+            bypass: false,
+        }
+    }
+}
+
+/// Fixed-capacity ring buffer for sample-accurate delay. Heap-allocated
+/// once at construction, then reused without further allocation in the
+/// audio process loop.
+#[derive(Debug)]
+struct RingDelay {
+    buf: Vec<f32>,
+    write: usize,
+    delay_samples: usize,
+}
+
+impl RingDelay {
+    fn new(capacity: usize) -> Self {
+        Self {
+            buf: vec![0.0; capacity.max(1)],
+            write: 0,
+            delay_samples: 0,
+        }
+    }
+
+    fn set_delay_samples(&mut self, n: usize) {
+        // Max usable delay is buf.len() - 1: with N slots and a delay of N
+        // the read index aliases the just-written sample (delay 0). Use
+        // saturating_sub so a degenerate capacity-1 buffer yields max=0
+        // (true passthrough) instead of the previous off-by-one where
+        // n=1 was requested but process() still returned the live sample.
+        let max = self.buf.len().saturating_sub(1);
+        self.delay_samples = n.min(max);
+    }
+
+    fn reset(&mut self) {
+        self.buf.fill(0.0);
+        self.write = 0;
+    }
+
+    #[inline]
+    fn process(&mut self, x: f32) -> f32 {
+        // Write current sample, read N samples ago.
+        let cap = self.buf.len();
+        self.buf[self.write] = x;
+        let read = (self.write + cap - self.delay_samples) % cap;
+        let out = self.buf[read];
+        self.write = (self.write + 1) % cap;
+        out
+    }
+}
+
+#[derive(Debug)]
+pub struct CrossfeedProcessor {
+    /// 4th-order low-pass (two Q=0.707 biquads) on each cross channel — cascade
+    /// of two biquads at the same cutoff so attenuation is steep enough
+    /// (~24 dB/oct) that the high frequencies stay properly separated.
+    lp_l: [Biquad; 2],
+    lp_r: [Biquad; 2],
+    delay_l: RingDelay,
+    delay_r: RingDelay,
+    sample_rate: f32,
+    params: CrossfeedParams,
+}
+
+impl CrossfeedProcessor {
+    pub fn new(sample_rate: f32, params: CrossfeedParams) -> Self {
+        assert!(
+            sample_rate.is_finite() && (8000.0..=768000.0).contains(&sample_rate),
+            "unsupported sample rate"
+        );
+        let params = params.sanitised();
+        let cap = ((sample_rate * BUFFER_HEADROOM_SEC) as usize).max(MIN_BUFFER_SAMPLES);
+        let mut s = Self {
+            lp_l: [Biquad::default(); 2],
+            lp_r: [Biquad::default(); 2],
+            delay_l: RingDelay::new(cap),
+            delay_r: RingDelay::new(cap),
+            sample_rate,
+            params,
+        };
+        s.update_coeffs();
+        s
+    }
+
+    fn update_coeffs(&mut self) {
+        let lp = BiquadCoeffs::lowpass(self.sample_rate, self.params.cutoff_hz, 0.707);
+        for f in &mut self.lp_l {
+            f.set_coeffs(lp);
+        }
+        for f in &mut self.lp_r {
+            f.set_coeffs(lp);
+        }
+        let samples = ((self.params.delay_us / US_PER_SEC) * self.sample_rate).round() as usize;
+        self.delay_l.set_delay_samples(samples);
+        self.delay_r.set_delay_samples(samples);
+    }
+
+    pub fn set_params(&mut self, p: CrossfeedParams) {
+        let p = p.sanitised();
+        let coeffs_changed = (self.params.cutoff_hz - p.cutoff_hz).abs() > 0.001
+            || (self.params.delay_us - p.delay_us).abs() > 0.001;
+        self.params = p;
+        if coeffs_changed {
+            self.update_coeffs();
+        }
+    }
+
+    pub fn reset(&mut self) {
+        for f in &mut self.lp_l {
+            f.reset();
+        }
+        for f in &mut self.lp_r {
+            f.reset();
+        }
+        self.delay_l.reset();
+        self.delay_r.reset();
+    }
+
+    #[inline]
+    pub fn process_stereo(&mut self, l: f32, r: f32) -> (f32, f32) {
+        let l = if l.is_finite() {
+            l.clamp(-16.0, 16.0)
+        } else {
+            0.0
+        };
+        let r = if r.is_finite() {
+            r.clamp(-16.0, 16.0)
+        } else {
+            0.0
+        };
+        if self.params.bypass || self.params.amount <= 0.0 {
+            return (l, r);
+        }
+
+        // Cross signal: low-passed copy of each channel, delayed by the
+        // ear-to-ear time-of-flight, then attenuated by `amount`.
+        let mut cross_l = l;
+        for f in &mut self.lp_l {
+            cross_l = f.process(cross_l);
+        }
+        let mut cross_r = r;
+        for f in &mut self.lp_r {
+            cross_r = f.process(cross_r);
+        }
+        let cross_l = self.delay_l.process(cross_l);
+        let cross_r = self.delay_r.process(cross_r);
+
+        let g = self.params.amount * BAUER_GAIN_LINEAR;
+
+        // Each ear gets its direct channel + the OPPOSITE ear's cross
+        // signal — that's the wrong-ear path that didn't exist on
+        // headphones until we added it back here.
+        (l + cross_r * g, r + cross_l * g)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SR: f32 = 48000.0;
+
+    fn sine(freq: f32, n: usize, sr: f32, amp: f32) -> Vec<f32> {
+        (0..n)
+            .map(|i| (2.0 * std::f32::consts::PI * freq * i as f32 / sr).sin() * amp)
+            .collect()
+    }
+
+    #[test]
+    fn bypass_passes_input_through() {
+        let mut p = CrossfeedProcessor::new(
+            SR,
+            CrossfeedParams {
+                bypass: true,
+                ..Default::default()
+            },
+        );
+        let l = sine(440.0, 256, SR, 0.5);
+        let r = sine(660.0, 256, SR, 0.5);
+        for i in 0..l.len() {
+            let (ol, or) = p.process_stereo(l[i], r[i]);
+            assert_eq!(ol, l[i]);
+            assert_eq!(or, r[i]);
+        }
+    }
+
+    #[test]
+    fn zero_amount_is_identity() {
+        let mut p = CrossfeedProcessor::new(
+            SR,
+            CrossfeedParams {
+                amount: 0.0,
+                ..Default::default()
+            },
+        );
+        let l = sine(1000.0, 256, SR, 0.5);
+        let r = sine(2000.0, 256, SR, 0.5);
+        for i in 0..l.len() {
+            let (ol, or) = p.process_stereo(l[i], r[i]);
+            assert_eq!(ol, l[i]);
+            assert_eq!(or, r[i]);
+        }
+    }
+
+    #[test]
+    fn output_is_finite_under_extreme_input() {
+        let mut p = CrossfeedProcessor::new(
+            SR,
+            CrossfeedParams {
+                amount: 1.0,
+                ..Default::default()
+            },
+        );
+        for i in 0..4096 {
+            let s = if i % 2 == 0 { 10.0 } else { -10.0 };
+            let (ol, or) = p.process_stereo(s, -s);
+            assert!(ol.is_finite() && or.is_finite());
+        }
+    }
+
+    #[test]
+    fn ring_delay_zero_passthrough() {
+        let mut d = RingDelay::new(64);
+        d.set_delay_samples(0);
+        for i in 0..16 {
+            let x = i as f32;
+            assert_eq!(d.process(x), x);
+        }
+    }
+
+    #[test]
+    fn ring_delay_reads_n_samples_back() {
+        let mut d = RingDelay::new(64);
+        d.set_delay_samples(5);
+        // First 5 samples come from the zero-initialised buffer.
+        for i in 0..5 {
+            assert_eq!(d.process(i as f32 + 1.0), 0.0);
+        }
+        // After that, every sample should be 5 samples behind.
+        for i in 5..16 {
+            let x = i as f32 + 1.0;
+            let expected = (i - 5) as f32 + 1.0;
+            assert_eq!(d.process(x), expected);
+        }
+    }
+
+    #[test]
+    fn ring_delay_clamps_oversize_request() {
+        let mut d = RingDelay::new(8);
+        d.set_delay_samples(100);
+        // Should clamp to capacity-1 = 7 without panicking.
+        for _ in 0..32 {
+            let _ = d.process(1.0);
+        }
+    }
+
+    #[test]
+    fn set_params_changes_response() {
+        let mut p = CrossfeedProcessor::new(
+            SR,
+            CrossfeedParams {
+                amount: 0.5,
+                cutoff_hz: 700.0,
+                delay_us: 280.0,
+                bypass: false,
+            },
+        );
+        let l_in = sine(1000.0, 1024, SR, 0.5);
+        let r_in = vec![0.0; 1024];
+        let baseline: Vec<f32> = l_in
+            .iter()
+            .zip(r_in.iter())
+            .map(|(&l, &r)| p.process_stereo(l, r).1)
+            .collect();
+        p.reset();
+        p.set_params(CrossfeedParams {
+            amount: 1.0,
+            cutoff_hz: 1500.0,
+            delay_us: 400.0,
+            bypass: false,
+        });
+        let stronger: Vec<f32> = l_in
+            .iter()
+            .zip(r_in.iter())
+            .map(|(&l, &r)| p.process_stereo(l, r).1)
+            .collect();
+        // Stronger settings must produce a louder cross signal on the right.
+        let baseline_rms: f32 = (baseline[512..].iter().map(|x| x * x).sum::<f32>() / 512.0).sqrt();
+        let stronger_rms: f32 = (stronger[512..].iter().map(|x| x * x).sum::<f32>() / 512.0).sqrt();
+        assert!(stronger_rms > baseline_rms);
+    }
+
+    #[test]
+    fn reset_clears_state() {
+        let mut p = CrossfeedProcessor::new(SR, CrossfeedParams::default());
+        p.set_params(CrossfeedParams {
+            amount: 1.0,
+            ..Default::default()
+        });
+        for _ in 0..1024 {
+            let _ = p.process_stereo(1.0, -1.0);
+        }
+        p.reset();
+        let mut tail = 0.0_f32;
+        for _ in 0..2048 {
+            let (ol, or) = p.process_stereo(0.0, 0.0);
+            tail = tail.max(ol.abs()).max(or.abs());
+        }
+        assert!(tail < 1.0e-5);
+    }
+    #[test]
+    fn nonfinite_audio_does_not_poison_state() {
+        let mut p = CrossfeedProcessor::new(
+            SR,
+            CrossfeedParams {
+                amount: 0.7,
+                ..Default::default()
+            },
+        );
+        for x in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY, 0.3, 0.0] {
+            let (l, r) = p.process_stereo(x, 0.2);
+            assert!(l.is_finite() && r.is_finite());
+        }
+        for _ in 0..4096 {
+            let x = 0.1;
+            let (l, r) = p.process_stereo(x, 0.2);
+            assert!(l.is_finite() && r.is_finite());
+        }
+    }
+}
