@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=com.bigcommunity.BigSound1
+Exec=/usr/bin/bigsound-daemon
+SystemdService=bigsound-daemon.service
