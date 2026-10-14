@@ -124,9 +124,19 @@ package() {
         install -Dm644 "$f" "$pkgdir/usr/share/bigsound/profiles/$(basename "$f")"
     done
 
-    # systemd user unit (auto-start on login when enabled).
+    # systemd user unit, enabled globally so it starts on every user's
+    # login without a manual `systemctl --user enable` (the unit pulls
+    # in filter-chain.service via Wants=).
     install -Dm644 crates/daemon/data/bigsound-daemon.service \
         "$pkgdir/usr/lib/systemd/user/bigsound-daemon.service"
+    install -dm755 "$pkgdir/usr/lib/systemd/user/default.target.wants"
+    ln -s ../bigsound-daemon.service \
+        "$pkgdir/usr/lib/systemd/user/default.target.wants/bigsound-daemon.service"
+
+    # D-Bus activation — if the app calls com.bigcommunity.BigSound1 and
+    # the daemon isn't up, the session bus starts it through systemd.
+    install -Dm644 crates/daemon/data/com.bigcommunity.BigSound1.service \
+        "$pkgdir/usr/share/dbus-1/services/com.bigcommunity.BigSound1.service"
 
     # Desktop entry (so GNOME / KDE / XFCE menus list "BigSound").
     install -Dm644 crates/gtk-app/data/com.bigcommunity.BigSound.desktop \
