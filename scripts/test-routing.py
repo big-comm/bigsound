@@ -88,6 +88,13 @@ class Machine:
             'monitor.bluez-midi = disabled monitor.alsa-midi = disabled monitor.v4l2 = disabled '
             'monitor.libcamera = disabled } }\n')
         write_chain_config(self.config, target, root)
+        # Profiles from this checkout; an installed package's profiles in
+        # /usr/share/bigsound would otherwise be the only ones on CI-less hosts
+        # and the stale ones on a developer machine.
+        profiles = self.config / 'bigsound/profiles'
+        profiles.mkdir(parents=True)
+        for profile in (root / 'crates/daemon/data/profiles').glob('*.json'):
+            shutil.copy(profile, profiles)
         self.silence = tmp / 'silence.wav'
         with wave.open(str(self.silence), 'wb') as wav:
             wav.setnchannels(1)

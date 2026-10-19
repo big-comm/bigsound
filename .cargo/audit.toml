@@ -1,0 +1,12 @@
+# cargo-audit reads this file from the project root (also in CI).
+[advisories]
+ignore = [
+    # zvariant, zvariant_derive and zbus_names were merged into zbus 6.0 and
+    # are flagged "unmaintained" (informational, no vulnerability). zbus 6
+    # removed the blocking API that the daemon, CLI and GTK app use, so the
+    # migration is tracked as separate work. Remove these three entries once
+    # the workspace depends on zbus 6.
+    "RUSTSEC-2026-0370", # zvariant
+    "RUSTSEC-2026-0371", # zbus_names
+    "RUSTSEC-2026-0372", # zvariant_derive
+]
