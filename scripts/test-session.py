@@ -19,6 +19,24 @@ import time
 import wave
 
 
+# A private config name: PipeWire reads `<name>.conf.d` from every config
+# directory, so with the stock name an installed BigSound package would add a
+# second chain (with the installed plugins) to the one under test.
+CHAIN_CONFIG = 'bigsound-test-chain.conf'
+
+
+def write_chain_config(config_home, target, root):
+    base = next(p for p in (Path('/etc/pipewire/filter-chain.conf'), Path('/usr/share/pipewire/filter-chain.conf'))
+                if p.is_file())
+    pipewire = config_home / 'pipewire'
+    (pipewire / (CHAIN_CONFIG + '.d')).mkdir(parents=True)
+    (pipewire / CHAIN_CONFIG).write_text(base.read_text())
+    text = (root / 'configs/pipewire/10-bigsound.conf.template').read_text()
+    for name in ('bass', 'clarity', 'space', 'cross', 'loud'):
+        text = text.replace('__BIG_' + name.upper() + '_SO_PATH__', str(target / f'libbig_{name}.so'))
+    (pipewire / (CHAIN_CONFIG + '.d') / '99-bigsound.conf').write_text(text)
+
+
 def parse_live_controls(props):
     """Read numeric SPA values across PipeWire debug-output versions."""
     actual = {}
@@ -51,12 +69,7 @@ def main(target):
         profiles.mkdir(parents=True)
         for profile in (root / 'crates/daemon/data/profiles').glob('*.json'):
             shutil.copy(profile, profiles)
-        dropin = config / 'pipewire/filter-chain.conf.d'
-        dropin.mkdir(parents=True)
-        text = (root / 'configs/pipewire/10-bigsound.conf.template').read_text()
-        for name in ('bass', 'clarity', 'space', 'cross', 'loud'):
-            text = text.replace('__BIG_' + name.upper() + '_SO_PATH__', str(target / f'libbig_{name}.so'))
-        (dropin / '99-bigsound.conf').write_text(text)
+        write_chain_config(config, target, root)
 
         # Inject one second-batch failure, then delegate every other command
         # to the real tool. All state belongs to this private test fixture.
@@ -118,7 +131,7 @@ def main(target):
             # The PipeWire core does not discover hardware. No WirePlumber is started.
             start(['pipewire'], 'pipewire')
             wait_for(lambda: (runtime / 'pipewire-0').exists(), 'private PipeWire socket')
-            chain = start(['pipewire', '-c', 'filter-chain.conf'], 'chain')
+            chain = start(['pipewire', '-c', CHAIN_CONFIG], 'chain')
             old_id = wait_for(lambda: node('BigSound'), 'full LADSPA chain')
             daemon = start([str(target / 'bigsound-daemon')], 'daemon')
             wait_for(lambda: subprocess.run([str(target / 'bigsound'), 'list'], env=env, capture_output=True).returncode == 0, 'D-Bus daemon')
@@ -209,7 +222,7 @@ def main(target):
             cli('profile', 'apply', 'BigSound', ok=False)
             assert float(cli('get', 'bigbass:mix')) == .31
             assert cli('profile', 'active') == active
-            chain = start(['pipewire', '-c', 'filter-chain.conf'], 'chain-restarted')
+            chain = start(['pipewire', '-c', CHAIN_CONFIG], 'chain-restarted')
             fresh_id = wait_for(lambda: node('BigSound'), 'filter-chain restart')
             for name, direction in [('BigSound', 'Input'), ('BigSound.output', 'Output'), ('qa-source', 'Output'), ('qa-record', 'Input')]:
                 # A session manager normally negotiates adapter ports. Configure

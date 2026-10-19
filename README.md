@@ -88,8 +88,8 @@ systemctl --user enable --now filter-chain.service bigsound-daemon.service
 ```
 
 A receita instala plugins LADSPA, daemon, interface, traduções, perfis e
-integração. Depois abra **Configurações → Som → Saída** e selecione
-**BigSound (DSP)**.
+integração. Com o serviço ativo, o BigSound passa a ser a saída do sistema
+automaticamente.
 
 ### Compilação e instalação local
 
@@ -103,10 +103,34 @@ serviços de áudio do BigSound na sessão do usuário.
 
 ## Uso
 
-1. Selecione **BigSound (DSP)** como saída do sistema.
+1. Use o som normalmente: com **Processar o áudio do sistema** ligado (padrão),
+   todo o áudio passa pelo BigSound.
 2. Abra o aplicativo e escolha um perfil na aba **Principal**.
 3. Deixe a saída física em **Automático** ou fixe seus alto-falantes/fones.
 4. Use **Avançado** para parâmetros específicos.
+
+### Trocar de alto-falante ou fone
+
+Em **Automático**, a troca é automática, no laptop ou no desktop:
+
+| O que você faz | O que o BigSound faz |
+|---|---|
+| Liga uma caixa ou fone **Bluetooth** | Passa a tocar nele e aplica o perfil Bluetooth |
+| Desliga o Bluetooth | Volta para a saída anterior (alto-falante do laptop, P2, USB…) |
+| Escolhe uma saída no **menu de som** do sistema | Toca nela, **continuando a processar** |
+| Pluga um dispositivo USB ou liga um monitor HDMI | Nada muda sozinho: escolha-o no menu de som, se quiser |
+
+Cada troca aplica o perfil do tipo de dispositivo (Laptop Speaker, Headphones,
+Bluetooth, HDMI / TV ou o perfil BigSound). USB e HDMI não assumem sozinhos
+porque microfones USB costumam ter saída de fone e monitores criam saídas ao
+ligar. Se nenhuma saída lembrada estiver conectada, vale a prioridade do
+PipeWire/WirePlumber. Uma saída **fixada** no aplicativo não muda com
+conexões, só com uma escolha explícita no menu de som.
+
+Para ouvir **sem** processamento, desligue **Processar o áudio do sistema** no
+aplicativo (ou `bigsound disable`): o som vai direto para o dispositivo em
+uso. Escolher **BigSound (DSP)** no menu de som, ou `bigsound enable`, liga
+de novo.
 
 O botão de restauração reaplica o **perfil selecionado inteiro**, incluindo
 os controles avançados. `Ctrl+1` e `Ctrl+2` alternam as abas. Mudanças de
@@ -139,6 +163,9 @@ automática conforme a saída. Um dispositivo fixado evita que outra saída
 de maior prioridade altere o destino escolhido.
 
 ```bash
+bigsound status
+bigsound enable
+bigsound disable
 bigsound show
 bigsound profile list
 bigsound profile apply "Voice / Podcast"

@@ -34,7 +34,11 @@ def main(args):
         env.update(DISPLAY=display,GDK_BACKEND='x11',GDK_SCALE='2',GSK_RENDERER='cairo',LIBGL_ALWAYS_SOFTWARE='1')
         profiles=work/'config/bigsound/profiles';profiles.mkdir(parents=True)
         for f in (source/'crates/daemon/data/profiles').glob('*.json'):shutil.copyfile(f,profiles/f.name)
-        dropin=work/'config/pipewire/filter-chain.conf.d';dropin.mkdir(parents=True)
+        # Private config name: the stock filter-chain.conf.d of an installed
+        # BigSound package would otherwise add a second chain.
+        base=next(p for p in (Path('/etc/pipewire/filter-chain.conf'),Path('/usr/share/pipewire/filter-chain.conf')) if p.is_file())
+        (work/'config/pipewire').mkdir(parents=True);(work/'config/pipewire/bigsound-test-chain.conf').write_text(base.read_text())
+        dropin=work/'config/pipewire/bigsound-test-chain.conf.d';dropin.mkdir(parents=True)
         template=(source/'configs/pipewire/10-bigsound.conf.template').read_text()
         for name in ('bass','clarity','space','cross','loud'):template=template.replace('__BIG_'+name.upper()+'_SO_PATH__',str(target/f'libbig_{name}.so'))
         (dropin/'99-bigsound.conf').write_text(template)
@@ -66,7 +70,7 @@ def main(args):
             if shutil.which('xsetroot'):run(['xsetroot','-solid','#fafafb'])
             start(['pipewire'],'pipewire')
             wait_for(lambda:(work/'runtime/pipewire-0').exists(),'private PipeWire')
-            chain=start(['pipewire','-c','filter-chain.conf'],'chain')
+            chain=start(['pipewire','-c','bigsound-test-chain.conf'],'chain')
             wait_for(lambda:'BigSound' in run(['pw-dump']),'LADSPA node')
             daemon=start([str(target/'bigsound-daemon')],'daemon')
             wait_for(lambda:subprocess.run([str(target/'bigsound'),'list'],env=env,capture_output=True).returncode==0,'audio daemon')

@@ -32,7 +32,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libgtk-4-dev libgtk-4-bin libadwaita-1-dev \
             libdbus-1-dev pkg-config gettext libgettextpo-dev \
-            pipewire pipewire-bin libspa-0.2-modules dbus-x11 shellcheck
+            pipewire pipewire-bin libspa-0.2-modules dbus-x11 shellcheck \
+            pipewire-pulse wireplumber pulseaudio-utils
       - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
           components: rustfmt, clippy

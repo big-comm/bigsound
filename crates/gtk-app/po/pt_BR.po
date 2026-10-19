@@ -441,3 +441,9 @@ msgstr ","
 
 msgid "Automatic"
 msgstr "Automático"
+
+msgid "While on, BigSound stays the system output: speakers or headphones chosen in the system sound menu, and Bluetooth devices as they connect, play with processing."
+msgstr "Ligado, o BigSound continua como saída do sistema: caixas ou fones escolhidos no menu de som do sistema, e dispositivos Bluetooth assim que conectam, tocam com processamento."
+
+msgid "Process system audio"
+msgstr "Processar o áudio do sistema"

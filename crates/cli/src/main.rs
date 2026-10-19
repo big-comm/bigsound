@@ -14,6 +14,11 @@
 //!   bigsound profile delete <name>         # remove a user-saved profile
 //!   bigsound profile active                # which profile was last applied
 //!
+//! Processing on/off:
+//!   bigsound status                        # on/off, output device, profile
+//!   bigsound enable                        # process system audio
+//!   bigsound disable                       # play directly on the device
+//!
 //! Output device:
 //!   bigsound output list                   # sinks BigSound can play through
 //!   bigsound output show                   # current choice ("" = automatic)
@@ -57,6 +62,12 @@ enum Cmd {
         #[command(subcommand)]
         cmd: ProfileCmd,
     },
+    /// Show whether processing is on, the output device and the profile
+    Status,
+    /// Turn processing on: BigSound becomes the system output
+    Enable,
+    /// Turn processing off: sound plays directly on the output device
+    Disable,
     /// Output device routing (which real sink BigSound plays through)
     Output {
         #[command(subcommand)]
@@ -88,7 +99,7 @@ enum OutputCmd {
     Show,
     /// Route BigSound's DSP output to a sink (its node.name, from `list`)
     Set { name: String },
-    /// Return to automatic routing (follow WirePlumber priority)
+    /// Return to automatic routing (last output selected in the system sound menu)
     Auto,
 }
 
@@ -119,6 +130,31 @@ fn main() -> Result<()> {
         .context("creating proxy — is bigsound-daemon running?")?;
 
     match cli.cmd {
+        Cmd::Status => {
+            let enabled: bool = proxy
+                .call("GetEnabled", &())
+                .context("calling GetEnabled")?;
+            let output: String = proxy
+                .call("GetOutputDevice", &())
+                .context("calling GetOutputDevice")?;
+            let profile: String = proxy
+                .get_property("ActiveProfile")
+                .context("reading ActiveProfile")?;
+            println!("processing: {}", if enabled { "on" } else { "off" });
+            if output.is_empty() {
+                println!("output: automatic (last selected or connected device)");
+            } else {
+                println!("output: {output} (fixed)");
+            }
+            println!("profile: {profile}");
+        }
+        Cmd::Enable | Cmd::Disable => {
+            let enable = matches!(cli.cmd, Cmd::Enable);
+            proxy
+                .call::<_, _, ()>("SetEnabled", &(enable,))
+                .context("calling SetEnabled")?;
+            println!("processing {}", if enable { "on" } else { "off" });
+        }
         Cmd::List => {
             let names: Vec<String> = proxy.call("List", &()).context("calling List")?;
             for n in names {
@@ -197,7 +233,7 @@ fn main() -> Result<()> {
                     .call("GetOutputDevice", &())
                     .context("calling GetOutputDevice")?;
                 let marker = if current.is_empty() { "★" } else { " " };
-                println!("{marker} (automatic — follow priority)");
+                println!("{marker} (automatic — last selected output)");
                 for (name, desc) in devices {
                     let marker = if name == current { "★" } else { " " };
                     println!("{marker} {desc}  [{name}]");
@@ -223,7 +259,7 @@ fn main() -> Result<()> {
                 proxy
                     .call::<_, _, ()>("SetOutputDevice", &("",))
                     .context("SetOutputDevice(auto)")?;
-                println!("routing set to automatic (follow priority)");
+                println!("routing set to automatic (last selected output)");
             }
         },
     }

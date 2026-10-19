@@ -84,9 +84,14 @@ impl Bus {
     }
 
     /// Route BigSound's DSP output to `name` (a sink `node.name`), or pass
-    /// "" to return to automatic priority-based routing.
+    /// "" to return to automatic routing (last selected connected output).
     fn set_output_device(&self, name: &str) -> zbus::Result<()> {
         self.proxy()?.call("SetOutputDevice", &(name,))
+    }
+
+    /// Turn system-wide processing on or off.
+    fn set_enabled(&self, enabled: bool) -> zbus::Result<()> {
+        self.proxy()?.call("SetEnabled", &(enabled,))
     }
 }
 
@@ -376,6 +381,7 @@ struct Snapshot {
     parameters: BTreeMap<String, f64>,
     devices: Vec<(String, String)>,
     output: String,
+    enabled: bool,
 }
 
 impl Bus {
@@ -395,6 +401,7 @@ impl Bus {
             parameters,
             devices: proxy.call("ListOutputDevices", &())?,
             output: proxy.call("GetOutputDevice", &())?,
+            enabled: proxy.call("GetEnabled", &())?,
         })
     }
 }
@@ -657,8 +664,21 @@ fn build_window(app: &adw::Application, bus: Bus) {
 
     let routing = adw::PreferencesGroup::new();
     routing.set_description(Some(&tr(
-        "Select BigSound (DSP) as the system output in Sound settings.",
+        "While on, BigSound stays the system output: speakers or headphones chosen in the system sound menu, and Bluetooth devices as they connect, play with processing.",
     )));
+    let power = adw::SwitchRow::builder()
+        .title(tr("Process system audio"))
+        .build();
+    {
+        let dispatcher = dispatch.clone();
+        let updating = updating.clone();
+        power.connect_active_notify(move |row| {
+            if !updating.get() {
+                dispatcher.send(row, Command::Enabled(row.is_active()));
+            }
+        });
+    }
+    routing.add(&power);
     let output = adw::ComboRow::builder()
         .title(tr("Output device"))
         .subtitle(tr("Which speakers or headphones BigSound plays through"))
@@ -773,8 +793,10 @@ fn build_window(app: &adw::Application, bus: Bus) {
         let output = output.clone();
         let devices = devices.clone();
         let dropdown = dropdown.clone();
+        let power = power.clone();
         move |snapshot| {
             updating.set(true);
+            power.set_active(snapshot.enabled);
             row.set_subtitle(&profile_summary(&snapshot.profile));
             profile_image.set_icon_name(Some(profile_icon(&snapshot.profile)));
             if let Some(index) = names.iter().position(|name| name == &snapshot.profile) {

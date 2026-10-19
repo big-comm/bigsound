@@ -208,9 +208,8 @@ fi
 if pactl list short sinks 2>/dev/null | grep -qE "^[0-9]+\s+BigSound\b"; then
     ok "sink 'BigSound' está ATIVO"
     echo
-    echo -e "Próximo passo:"
-    echo -e "  Abra ${C_OK}Configurações → Som → Saída${C_RST}"
-    echo -e "  e selecione ${C_OK}'BigSound (DSP)'${C_RST} como dispositivo de saída."
+    echo -e "O BigSound passa a ser a saída do sistema automaticamente."
+    echo -e "Escolha caixas ou fones no ${C_OK}menu de som${C_RST}: o processamento continua."
     echo
     echo -e "Toda música/vídeo do sistema (YouTube, Spotify, etc) vai passar por BigSound."
     echo

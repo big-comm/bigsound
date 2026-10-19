@@ -19,6 +19,16 @@ and `dbus-run-session`; GTK smoke testing additionally needs
 `gtk4-broadwayd`. It starts no hardware monitors or session manager and does
 not connect to the user's audio sockets.
 
+The routing integration test (`scripts/test-routing.py`, also run by
+`BIGSOUND_TEST_SESSION=1`) adds `wireplumber`, `pipewire-pulse`, `pactl`,
+`pw-metadata` and `stdbuf`. It runs a private WirePlumber with hardware
+monitors disabled, an application playing audio, and fake output devices
+named and prioritised like real hardware: laptop speakers / desktop jack
+(1009), Bluetooth (1010) and USB (1109). It simulates a laptop gaining a
+Bluetooth speaker and the desktop where the v0.7.2 bug was reported, and
+checks the whole path (application → BigSound → one device) and the profile
+after every connection, disconnection, sound-menu choice and on/off switch.
+
 ## What each layer establishes
 
 | Layer | Evidence | Limit |
@@ -29,6 +39,7 @@ not connect to the user's audio sockets.
 | LADSPA ABI | actual .so lifecycle, null controls/audio, invalid rates, in-place buffers and irregular block sizes | assumes host supplies valid non-null pointers and adequate buffer lengths |
 | Stress/performance | complete chain with profile switches and resets, blocks of 64/256/1024 at four rates | offline throughput on one machine, not a hard real-time guarantee |
 | Private session | real D-Bus CLI/daemon, live PipeWire controls, concurrent requests, profile persistence, real partial-profile rollback, filter-chain restart, captured processed audio | no physical ALSA/Bluetooth/HDMI device or WirePlumber policy |
+| Private routing | real WirePlumber policy and pipewire-pulse on simulated laptop and desktop: fresh install, Bluetooth connect/disconnect/reconnect, sound-menu choices keep processing, quick switches, USB microphone ignored, fixed device, on/off, per-device profiles, state across daemon restarts | fake null sinks, not physical devices; the WirePlumber version is the distribution's |
 | GTK | Broadway startup and private X11 2× captures with mode/profile synchronization; worker coalescence/order unit tests | no comprehensive accessibility, visual or prolonged interactive regression coverage |
 | Security | RustSec and heuristic publication scan of candidates and reachable history | a clean scan does not prove absence of confidential context |
 

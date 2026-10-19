@@ -14,12 +14,13 @@ post_install() {
 
         systemctl --user start bigsound-daemon.service
 
-    Depois abra Configurações → Som → Saída e selecione "BigSound (DSP)".
-    Tudo que tocar no sistema (YouTube, Spotify, MPV, Discord) vai passar
-    pela cadeia BigBass → BigClarity → BigSpace → BigCross → BigLoud automaticamente.
+    O BigSound passa a ser a saída do sistema sozinho. Tudo que tocar
+    (YouTube, Spotify, MPV, Discord) passa pela cadeia
+    BigBass → BigClarity → BigSpace → BigCross → BigLoud.
 
-    Pluga e despluga fones — o BigSound auto-detecta e aplica o profile
-    correto sem cliques (laptop / fones / Bluetooth / HDMI).
+    Ligue uma caixa ou fone Bluetooth, ou escolha outra saída no menu de
+    som: o BigSound toca nela e aplica o perfil certo, sem cliques extras.
+    Para ouvir sem processamento: bigsound disable (ou o interruptor no app).
 
     Ajuste fino: abra "BigSound" no menu de aplicativos, ou use
     `bigsound show` / `bigsound profile list` no terminal.

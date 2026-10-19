@@ -24,6 +24,7 @@ fi
 msgfmt --check -o "$evidence_dir/pt_BR.mo" crates/gtk-app/po/pt_BR.po
 if [[ "${BIGSOUND_TEST_SESSION:-0}" == 1 ]]; then
     python3 scripts/test-session.py "$target_dir/release" | tee "$evidence_dir/session.txt"
+    python3 scripts/test-routing.py "$target_dir/release" | tee "$evidence_dir/routing.txt"
 fi
 if command -v cargo-audit >/dev/null; then
     audit_args=(--deny warnings)

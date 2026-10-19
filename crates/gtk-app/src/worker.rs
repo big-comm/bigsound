@@ -8,6 +8,7 @@ pub enum Command {
     Set(&'static str, f64),
     Profile(String),
     Output(String),
+    Enabled(bool),
 }
 
 pub struct Event {
@@ -84,6 +85,7 @@ pub fn start(bus: Bus) -> (SyncSender<Command>, Receiver<Event>) {
                     Command::Set(name, value) => bus.set(name, value),
                     Command::Profile(name) => bus.apply_profile(&name),
                     Command::Output(name) => bus.set_output_device(&name),
+                    Command::Enabled(enabled) => bus.set_enabled(enabled),
                 };
                 if let Err(failure) = result {
                     error.get_or_insert_with(|| failure.to_string());
