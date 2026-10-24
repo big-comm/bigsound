@@ -3,10 +3,11 @@
 **/target/
 
 # makepkg build artifacts (local package builds).
-packaging/pkg/
-packaging/src/
-packaging/*.pkg.tar*
-packaging/*.log
+pkgbuild/pkg/
+pkgbuild/src/
+pkgbuild/bigsound/
+pkgbuild/*.pkg.tar*
+pkgbuild/*.log
 
 # Test audio files (offline DSP validation).
 *.wav

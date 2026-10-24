@@ -1,0 +1,136 @@
+# Maintainer: Leonardo Athayde <leoathayde@gmail.com>
+
+pkgname=bigsound
+pkgdesc="System-wide audio enhancement for BigCommunity (BigBass + BigClarity + BigSpace + BigCross + BigLoud) with auto-profile per output device"
+depends=(
+    'pipewire'
+    'pipewire-pulse'
+    'gtk4'
+    'libadwaita>=1.4'
+    'glibc'
+    'libgcc'
+    'glib2'
+    'hicolor-icon-theme'
+    'libpulse'
+)
+optdepends=(
+    'pipewire-jack: replace JACK with PipeWire-JACK for compatibility'
+)
+makedepends=(
+    'rust'
+    'cargo'
+    'git'
+    'pkgconf'
+    'gettext'
+)
+pkgver=$(date +%y.%m.%d)
+pkgrel=$(date +%H%M)
+arch=('x86_64')
+license=('GPL-3.0-or-later')
+url="https://github.com/big-comm/${pkgname}"
+source=("git+${url}.git")
+md5sums=('SKIP')
+
+# Automatically detect and use the correct install file
+if [ -e "${pkgname}.install" ]; then
+    install=${pkgname}.install
+elif [ -e "pkgbuild.install" ]; then
+    install=pkgbuild.install
+fi
+
+prepare() {
+    cd "${srcdir}/${pkgname}"
+    export RUSTUP_TOOLCHAIN=stable
+    # Never change dependency resolution during packaging.
+    cargo fetch --locked
+}
+
+build() {
+    cd "${srcdir}/${pkgname}"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR="${srcdir}/target"
+    # Rust panic locations can embed build paths even in stripped binaries.
+    # Keep the caller's flags and map the build paths to neutral ones.
+    local _encoded_flags="${CARGO_ENCODED_RUSTFLAGS-}"
+    if [[ ! -v CARGO_ENCODED_RUSTFLAGS ]]; then
+        local -a _rust_flags=()
+        local _flag
+        read -r -a _rust_flags <<< "${RUSTFLAGS-}"
+        for _flag in "${_rust_flags[@]}"; do
+            _encoded_flags+="${_encoded_flags:+$'\x1f'}$_flag"
+        done
+    fi
+    export CARGO_ENCODED_RUSTFLAGS="${_encoded_flags}${_encoded_flags:+$'\x1f'}--remap-path-prefix=${HOME}=/build/user"$'\x1f'"--remap-path-prefix=${srcdir}=/build"
+    cargo build --release --frozen \
+        -p big-bass-ladspa \
+        -p big-clarity-ladspa \
+        -p big-space-ladspa \
+        -p big-cross-ladspa \
+        -p big-loud-ladspa \
+        -p bigsound-daemon \
+        -p bigsound-cli \
+        -p bigsound-app
+}
+
+package() {
+    cd "${srcdir}/${pkgname}"
+    local _release="${srcdir}/target/release"
+
+    # LADSPA plugins, system-wide so PipeWire's filter-chain finds them.
+    install -Dm755 "${_release}/libbig_bass.so"    "${pkgdir}/usr/lib/ladspa/big_bass.so"
+    install -Dm755 "${_release}/libbig_clarity.so" "${pkgdir}/usr/lib/ladspa/big_clarity.so"
+    install -Dm755 "${_release}/libbig_space.so"   "${pkgdir}/usr/lib/ladspa/big_space.so"
+    install -Dm755 "${_release}/libbig_cross.so"   "${pkgdir}/usr/lib/ladspa/big_cross.so"
+    install -Dm755 "${_release}/libbig_loud.so"    "${pkgdir}/usr/lib/ladspa/big_loud.so"
+
+    # Binaries
+    install -Dm755 "${_release}/bigsound-daemon" "${pkgdir}/usr/bin/bigsound-daemon"
+    install -Dm755 "${_release}/bigsound"        "${pkgdir}/usr/bin/bigsound"
+    install -Dm755 "${_release}/bigsound-app"    "${pkgdir}/usr/bin/bigsound-app"
+
+    # PipeWire filter-chain config pointing at the plugins above.
+    install -dm755 "${pkgdir}/usr/share/pipewire/filter-chain.conf.d"
+    sed -e "s|__BIG_BASS_SO_PATH__|/usr/lib/ladspa/big_bass.so|g"       \
+        -e "s|__BIG_CLARITY_SO_PATH__|/usr/lib/ladspa/big_clarity.so|g" \
+        -e "s|__BIG_SPACE_SO_PATH__|/usr/lib/ladspa/big_space.so|g"     \
+        -e "s|__BIG_CROSS_SO_PATH__|/usr/lib/ladspa/big_cross.so|g"     \
+        -e "s|__BIG_LOUD_SO_PATH__|/usr/lib/ladspa/big_loud.so|g"       \
+        configs/pipewire/10-bigsound.conf.template                      \
+        > "${pkgdir}/usr/share/pipewire/filter-chain.conf.d/10-bigsound.conf"
+
+    # Bundled profiles; the daemon merges them with ~/.config/bigsound/profiles/.
+    for f in crates/daemon/data/profiles/*.json; do
+        install -Dm644 "$f" "${pkgdir}/usr/share/bigsound/profiles/$(basename "$f")"
+    done
+
+    # systemd user unit, enabled globally so it starts on every login
+    # (it pulls in filter-chain.service through Wants=).
+    install -Dm644 crates/daemon/data/bigsound-daemon.service \
+        "${pkgdir}/usr/lib/systemd/user/bigsound-daemon.service"
+    install -dm755 "${pkgdir}/usr/lib/systemd/user/default.target.wants"
+    ln -s ../bigsound-daemon.service \
+        "${pkgdir}/usr/lib/systemd/user/default.target.wants/bigsound-daemon.service"
+
+    # D-Bus activation: the session bus starts the daemon when the app calls it.
+    install -Dm644 crates/daemon/data/com.bigcommunity.BigSound1.service \
+        "${pkgdir}/usr/share/dbus-1/services/com.bigcommunity.BigSound1.service"
+
+    # Desktop entry and icons
+    install -Dm644 crates/gtk-app/data/com.bigcommunity.BigSound.desktop \
+        "${pkgdir}/usr/share/applications/com.bigcommunity.BigSound.desktop"
+    install -Dm644 crates/gtk-app/data/icons/com.bigcommunity.BigSound.svg \
+        "${pkgdir}/usr/share/icons/hicolor/scalable/apps/com.bigcommunity.BigSound.svg"
+    install -Dm644 crates/gtk-app/data/icons/com.bigcommunity.BigSound-symbolic.svg \
+        "${pkgdir}/usr/share/icons/hicolor/symbolic/apps/com.bigcommunity.BigSound-symbolic.svg"
+
+    # Translation catalogs
+    for po in crates/gtk-app/po/*.po; do
+        [ -f "$po" ] || continue
+        lang=$(basename "$po" .po)
+        install -d "${pkgdir}/usr/share/locale/${lang}/LC_MESSAGES"
+        msgfmt "$po" -o "${pkgdir}/usr/share/locale/${lang}/LC_MESSAGES/bigsound.mo"
+    done
+
+    install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

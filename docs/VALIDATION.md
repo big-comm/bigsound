@@ -89,20 +89,20 @@ checks the working tree and, with `--history`, all locally reachable blobs
 and commit messages. It does not rewrite Git history or examine unrelated
 repositories. No AI coauthor trailer is added by these workflows.
 
-## Portable Arch source recipe
+## Arch package recipe
 
-The checked-in `packaging/PKGBUILD` builds its parent checkout; it is not a
-standalone distribution recipe. Render a portable recipe after producing a
-reviewed source archive or publishing a verified tag/archive:
+`pkgbuild/PKGBUILD` follows the layout of the other `big-comm` packages. It
+clones `big-comm/bigsound` (build-package points testing builds at the
+`dev-*` branch) and versions the package by build date. To package the
+committed state of the current branch locally, build a copy whose source
+points at this checkout:
 
 ```bash
-python3 scripts/render-release-pkgbuild.py SOURCE_URL VERIFIED_SHA256 OUTPUT/PKGBUILD
+tmp=$(mktemp -d)
+sed "s|^source=.*|source=(\"bigsound::git+file://$PWD#branch=$(git branch --show-current)\")|" \
+    pkgbuild/PKGBUILD > "$tmp/PKGBUILD"
+(cd "$tmp" && makepkg -f)
 ```
-
-The renderer requires a 64-character SHA-256 digest, never `SKIP`, uses the
-extracted `bigsound-$pkgver` tree and copies the installation hook alongside
-the recipe. A local archive filename may be used for an offline source bundle.
-Do not substitute a future release URL until that artifact actually exists.
 
 For a bounded CPU-load soak:
 

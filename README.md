@@ -79,10 +79,11 @@ Requer Linux com PipeWire, GTK4, libadwaita ≥ 1.4, gettext e Rust/Cargo.
 
 ### Arch / BigCommunity
 
-No checkout do projeto:
+No BigCommunity, instale pelo repositório (`sudo pacman -S bigsound`). Para
+compilar a receita do pacote, que baixa a versão publicada em `big-comm/bigsound`:
 
 ```bash
-cd packaging
+cd pkgbuild
 makepkg -si
 systemctl --user enable --now filter-chain.service bigsound-daemon.service
 ```
@@ -234,9 +235,9 @@ sem monitores de hardware ou conexão aos sockets de áudio do usuário.
 Novas alterações são feitas em `dev-xathay` e revisadas por pull request para
 `main`. Consulte [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Para uma receita portátil de distribuição, use
-`scripts/render-release-pkgbuild.py` com uma fonte existente e SHA-256
-verificado. `packaging/PKGBUILD` compila o checkout pai.
+O pacote do BigCommunity é gerado a partir de `pkgbuild/PKGBUILD`, no mesmo
+formato dos demais pacotes do `big-comm`: o código vem de
+`big-comm/bigsound` e a versão do pacote segue a data da compilação.
 
 ## Licença e autoria
 
