@@ -7,7 +7,6 @@ Use a local archive filename for an offline source bundle, or a published URL.
 from pathlib import Path
 import re
 import shlex
-import shutil
 import sys
 
 
@@ -30,7 +29,6 @@ def render(source, checksum, destination):
                             '    cd "$_root"')
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(recipe)
-    shutil.copy(root / 'packaging/bigsound.install', destination.parent / 'bigsound.install')
 
 
 if __name__ == '__main__':

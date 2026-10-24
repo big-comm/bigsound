@@ -6,7 +6,7 @@ pkgver=0.7.3
 pkgrel=1
 pkgdesc='System-wide audio enhancement for BigCommunity (BigBass + BigClarity + BigSpace + BigCross + BigLoud) with auto-profile per output device'
 arch=('x86_64')
-url='https://github.com/xathay/bigsound'
+url='https://github.com/big-comm/bigsound'
 license=('GPL-3.0-or-later')
 
 depends=(
@@ -31,7 +31,6 @@ optdepends=(
 )
 
 provides=("$pkgname=$pkgver")
-install=bigsound.install
 
 # Local-build PKGBUILD: assumes the workspace lives at ../  relative to
 # this file. For real distribution, replace `source=()` with a git
@@ -159,6 +158,3 @@ package() {
     # License.
     install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
-
-# Post-install hint shown to the user via pacman .install hooks.
-# Place this in `bigsound.install` next to the PKGBUILD.

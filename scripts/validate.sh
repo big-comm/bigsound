@@ -11,13 +11,13 @@ cargo test --workspace --locked --target-dir "$target_dir" | tee "$evidence_dir/
 cargo build --workspace --release --locked --target-dir "$target_dir"
 python3 scripts/test-ladspa.py "$target_dir/release" | tee "$evidence_dir/ladspa.txt"
 "$target_dir/release/bigsound-qa" "${BIGSOUND_STRESS_SECONDS:-30}" | tee "$evidence_dir/performance.csv"
-for shell_source in scripts/*.sh packaging/PKGBUILD packaging/bigsound.install; do
+for shell_source in scripts/*.sh packaging/PKGBUILD; do
     bash -n "$shell_source"
 done
 if command -v shellcheck >/dev/null; then
     shellcheck scripts/*.sh
     # makepkg provides the package metadata and srcdir/pkgdir variables.
-    shellcheck --shell=bash --exclude=SC2034,SC2154 packaging/PKGBUILD packaging/bigsound.install
+    shellcheck --shell=bash --exclude=SC2034,SC2154 packaging/PKGBUILD
 else
     echo 'ShellCheck skipped: install shellcheck for the full shell lint gate.' >&2
 fi
