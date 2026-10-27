@@ -959,6 +959,9 @@ struct ServiceInner {
     /// Whether Automatic left a `target.object` pin on `BigSound.output`
     /// that must be cleared once no remembered sink is connected.
     auto_pinned: AtomicBool,
+    /// Output last reported as disconnected, so the poll loop says so once
+    /// instead of failing on every tick until it returns.
+    missing_output: Mutex<Option<String>>,
     /// Serializes routing changes from D-Bus, the poll loop and the
     /// metadata watcher.
     routing: Mutex<()>,
@@ -991,6 +994,7 @@ impl ServiceInner {
             // A previous daemon run may have left an automatic pin behind;
             // assume one exists so the first check clears it if unneeded.
             auto_pinned: AtomicBool::new(true),
+            missing_output: Mutex::new(None),
             routing: Mutex::new(()),
             enabled: AtomicBool::new(load_enabled()),
             arrivals: Mutex::new(routing::ArrivalTracker::default()),
@@ -1192,6 +1196,20 @@ impl ServiceInner {
             if node_id_matches(cached, "BigSound.output", None) && output_links_to_sink(&sink) {
                 return Ok(());
             }
+            // A fixed device that is switched off has nothing to route to:
+            // wait for it without dumping the graph on every tick.
+            if !available_sink_names()?.contains(&sink) {
+                let mut missing = self
+                    .missing_output
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner());
+                if routing::newly_missing(&mut missing, &sink) {
+                    eprintln!(
+                        "bigsound-daemon: output device '{sink}' is not connected; waiting for it"
+                    );
+                }
+                return Ok(());
+            }
         }
         let dump = pipewire_dump()?;
         let output = node_target_from_dump(&dump, "BigSound.output")?;
@@ -1205,6 +1223,10 @@ impl ServiceInner {
             .with_context(|| format!("pinning output to '{sink}'"))?;
         self.output_node_id.store(output.id, Ordering::Release);
         self.auto_pinned.store(!pinned, Ordering::Release);
+        *self
+            .missing_output
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = None;
         eprintln!(
             "bigsound-daemon: BigSound output routed to '{sink}' ({})",
             if pinned { "pinned" } else { "automatic" }

@@ -192,6 +192,11 @@ class Machine:
     def cli(self, *args):
         return self.run(str(self.target / 'bigsound'), *args)
 
+    def daemon_log(self):
+        for log in self.logs:
+            log.flush()
+        return (self.tmp / 'daemon.log').read_text(errors='replace')
+
     # -- observations --------------------------------------------------------
     def targets(self, source):
         found, current = set(), None
@@ -253,6 +258,18 @@ def laptop(m):
     m.expect(HEADPHONES, 'Bluetooth headphones connect: they take over')
     m.sound_menu(SPEAKER)
     m.expect(SPEAKER, 'speaker chosen in the sound menu: processing continues on it')
+
+    m.cli('output', 'set', HEADPHONES)
+    m.expect(HEADPHONES, 'headphones fixed in the app')
+    m.disconnect(HEADPHONES)
+    before = m.daemon_log()
+    time.sleep(10)  # about three poll ticks
+    waiting = m.daemon_log()[len(before):]
+    assert waiting.count('is not connected') <= 1 and 'failed' not in waiting, \
+        'fixed headphones switched off: the daemon must wait quietly\n' + waiting
+    print(f'ok - {m.name}: fixed headphones switched off: the daemon waits quietly')
+    m.connect(HEADPHONES)
+    m.expect(HEADPHONES, 'fixed headphones on again: BigSound returns to them')
 
 
 def desktop(m):

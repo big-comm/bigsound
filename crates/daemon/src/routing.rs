@@ -176,6 +176,16 @@ impl ArrivalTracker {
     }
 }
 
+/// Remembers the output last reported as disconnected. Returns whether
+/// `sink` has just gone missing, i.e. whether it is worth a log line.
+pub fn newly_missing(last: &mut Option<String>, sink: &str) -> bool {
+    if last.as_deref() == Some(sink) {
+        return false;
+    }
+    *last = Some(sink.to_string());
+    true
+}
+
 /// Sink names from `pactl list short sinks` (tab separated, name second).
 pub fn sink_names_from_pactl_short(text: &str) -> Vec<String> {
     text.lines()
@@ -344,6 +354,16 @@ mod tests {
         assert!(!is_bluetooth_sink(HYPERX));
         assert!(!is_bluetooth_sink(HDMI));
         assert!(!is_bluetooth_sink("bluez_input.00_1A_7D_DA_71_13.0"));
+    }
+
+    #[test]
+    fn a_missing_output_is_reported_once_until_it_returns() {
+        let mut last = None;
+        assert!(newly_missing(&mut last, EDIFIER));
+        assert!(!newly_missing(&mut last, EDIFIER));
+        assert!(newly_missing(&mut last, HYPERX));
+        last = None; // routed again
+        assert!(newly_missing(&mut last, HYPERX));
     }
 
     #[test]
